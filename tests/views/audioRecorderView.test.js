@@ -8,22 +8,24 @@ import State from '../../src/components/State';
 const statusMessages = {};
 statusMessages[State.RECORDING] = "Recording...";
 statusMessages[State.READY] = "Press a button below to record your answer.";
-
-// setup initial state for audio recorder
-const initialData = {
-  title: 'Title',
-  state: State.READY,
-  statusMessages,
-  l10n: {},
-  audioSrc: '',
-  audioFilename: '',
-  avgMicFrequency: 0
-};
-
-AudioRecorderView.data = () => initialData;
+statusMessages[State.PAUSED] = "Paused";
+statusMessages[State.DONE] = "Done";
 
 // prepare viewModel
 test.beforeEach(t => {
+  // setup initial state for audio recorder
+  const initialData = {
+    title: 'Title',
+    state: State.READY,
+    statusMessages,
+    l10n: {},
+    audioSrc: '',
+    audioFilename: '',
+    avgMicFrequency: 0
+  };
+
+  AudioRecorderView.data = () => initialData;
+
   t.context.vm = new Vue({
     ...AudioRecorderView,
     components: {
@@ -41,7 +43,7 @@ test('ready state', async t => {
 
     // check that title is rendered
     const titleEl = el.querySelector('.title');
-    t.is(titleEl.textContent, initialData.title);
+    t.is(titleEl.textContent, 'Title');
 
     // check that status message is updated
     const statusEl = el.querySelector('[role="status"]');
@@ -61,6 +63,7 @@ test('change state to "RECORDING"', async t => {
   // set state to recording
   t.context.vm.state = State.RECORDING;
 
+
   Vue.nextTick(() => {
     const el = t.context.vm.$el;
 
@@ -75,5 +78,55 @@ test('change state to "RECORDING"', async t => {
 
     // check that only 2 buttons are showing
     t.is(el.querySelectorAll('.button').length, 3);
+  });
+});
+
+test('change state to "PAUSED"', async t => {
+  t.plan(5);
+
+  // set state to recording
+  t.context.vm.state = State.PAUSED;
+
+  Vue.nextTick(() => {
+    const el = t.context.vm.$el;
+
+    // check that status message is updated
+    const statusEl = el.querySelector('[role="status"]');
+    t.is(statusEl.textContent, statusMessages[State.PAUSED]);
+
+    // check that pulse, pause button, finish button is present
+    t.truthy(el.querySelector('.button.retry'));
+    t.truthy(el.querySelector('.button.record'));
+    t.truthy(el.querySelector('.button.done'));
+
+    // check that only 2 buttons are showing
+    t.is(el.querySelectorAll('.button').length, 3);
+
+  });
+});
+
+test('change state to "DONE"', async t => {
+  t.plan(4);
+
+  // set state to recording
+  t.context.vm.state = State.DONE;
+
+  Vue.nextTick(() => {
+    const el = t.context.vm.$el;
+
+    // check that status message is updated
+    const statusEl = el.querySelector('[role="status"]');
+    t.is(statusEl.textContent, statusMessages[State.DONE]);
+
+    // check for audio player
+    //t.truthy(el.querySelector('.h5p-audio-recorder-player'));
+
+    // check that pulse, pause button, finish button is present
+    t.truthy(el.querySelector('.button.retry'));
+    t.truthy(el.querySelector('.button.download'));
+
+    // check that only 2 buttons are showing
+    t.is(el.querySelectorAll('.button').length, 2);
+
   });
 });
